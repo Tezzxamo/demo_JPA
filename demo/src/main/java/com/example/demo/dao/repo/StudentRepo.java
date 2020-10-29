@@ -5,19 +5,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author zzx
  */
 
-public interface StudentRepo extends JpaRepository<Student,Integer> {
+public interface StudentRepo extends JpaRepository<Student, UUID> {
 
     /**
-     * 根据c_id获取班级里的所有学生
-     * @param c_id 班级id
+     * 根据cid获取班级里的所有学生
+     * @param cname 班级id
      * @return 返回班级里的所有学生
      */
-    Set<Student> findByClazzId(Integer c_id);
+    Set<Student> findByClazzCname(String cname);
 
 
 //    Set<Student> findByClazzIn(List<Integer> ids);

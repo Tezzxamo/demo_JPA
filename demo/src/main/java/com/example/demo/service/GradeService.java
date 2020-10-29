@@ -1,8 +1,11 @@
 package com.example.demo.service;
 
+import com.example.demo.dao.dbo.Clazz;
 import com.example.demo.dao.dbo.Grade;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Tethamo_zzx
@@ -13,7 +16,7 @@ public interface GradeService {
     /**
      * 通过年级来进行分类
      */
-    List<Grade> classifyByGrade();
+    Map<String, Set<Clazz>> classify();
 
-    Boolean existById(Integer g_id);
+    Boolean existByName(String gname);
 }

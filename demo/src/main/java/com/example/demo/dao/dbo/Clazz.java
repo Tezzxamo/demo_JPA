@@ -1,10 +1,13 @@
 package com.example.demo.dao.dbo;
 
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 
 @Entity
@@ -13,18 +16,30 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode
-public class Clazz {
+public class Clazz implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "cuuid")
+    @Type(type = "uuid-char")
+    private UUID cuuid;
+
+    @Column
+    private String cname;
 
     @ManyToOne
-    @JoinColumn(name = "g_id")
+    @JoinColumn(name = "gName", referencedColumnName = "gName")
     private Grade grade;
 
     @Column
-    @OneToMany(cascade = CascadeType.ALL,mappedBy = "clazz",fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "clazz", fetch = FetchType.EAGER)
     private Set<Student> studentList;
 
+
+    @Override
+    public String toString() {
+        return "Clazz:[uuid = " + getCuuid() +
+                " ,c_name = " + getCname() +
+                " ,Grade_name = " + getGrade().getGname() +
+                "]";
+    }
 }

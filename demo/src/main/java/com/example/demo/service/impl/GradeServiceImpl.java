@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Tethamo_zzx
@@ -27,19 +30,18 @@ public class GradeServiceImpl implements GradeService {
 
     /**
      *
-     * @return
+     * @return gl
      */
     @Override
-    public List<Grade> classifyByGrade() {
-        List<Grade> gradeList = gradeRepo.findAll();
-        //
-        //
-        return gradeList;
+    public Map<String, Set<Clazz>> classify() {
+        return gradeRepo.findAll()
+                .stream()
+                .collect(Collectors.toMap(Grade::getGname,Grade::getClazzList));
     }
 
     @Override
-    public Boolean existById(Integer g_id) {
-        Optional<Grade> optionalClazz = gradeRepo.findById(g_id);
+    public Boolean existByName(String gname) {
+        Optional<Grade> optionalClazz = gradeRepo.findByGname(gname);
         return optionalClazz.isPresent();
     }
 }

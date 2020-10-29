@@ -3,9 +3,12 @@ package com.example.demo.dao.dbo;
 
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.UUID;
 
 
 /**
@@ -18,33 +21,38 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Student {
+public class Student implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "s_id")
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "suuid")
+    @Type(type = "uuid-char")
+    private UUID suuid;
+
+    @Column(columnDefinition = "int(10) not null UNIQUE auto_increment")
+    private Integer snumber;
 
     @Column
-    private String gender;
+    private String sgender;
 
     @Column
-    private String name;
+    private String sname;
 
     @Column
     private LocalDate birthday;
 
     @ManyToOne
-    @JoinColumn(name = "c_id")
+    @JoinColumn(name = "cname", referencedColumnName = "cname")
     private Clazz clazz;
 
     @Override
     public String toString() {
-        return "Student:[s_id="+getId()+
-                " ,s_name="+getName()+
-                " ,s_gender="+getGender()+
-                " ,s_birthday="+getBirthday()+
-                " ,class_id="+getClazz().getId()+
+        return "Student:[uuid = " + getSuuid() +
+                " ,s_number = " + getSnumber() +
+                " ,s_name = " + getSname() +
+                " ,s_gender =" + getSgender() +
+                " ,s_birthday = " + getBirthday() +
+                " ,class_name = " + getClazz().getCname() +
                 "]";
     }
 }

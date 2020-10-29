@@ -2,10 +2,13 @@ package com.example.demo.dao.dbo;
 
 
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "tb_grade")
@@ -14,14 +17,16 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-public class Grade {
+public class Grade implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "guuid")
+    @Type(type = "uuid-char")
+    private UUID guuid;
 
     @Column
-    private String gName;
+    private String gname;
 
     @Column
     @OneToMany(cascade = CascadeType.ALL,mappedBy = "grade",fetch = FetchType.EAGER)

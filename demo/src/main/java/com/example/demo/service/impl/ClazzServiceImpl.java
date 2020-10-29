@@ -5,6 +5,7 @@ import com.example.demo.dao.dbo.Clazz;
 import com.example.demo.dao.dbo.Grade;
 import com.example.demo.dao.dbo.Student;
 import com.example.demo.dao.repo.ClazzRepo;
+import com.example.demo.dao.repo.GradeRepo;
 import com.example.demo.dao.repo.StudentRepo;
 import com.example.demo.service.ClazzService;
 import com.example.demo.service.GradeService;
@@ -27,36 +28,42 @@ public class ClazzServiceImpl implements ClazzService {
 
     ClazzRepo clazzRepo;
     StudentRepo studentRepo;
+    GradeRepo gradeRepo;
     GradeService gradeService;
 
     @Autowired
-    public ClazzServiceImpl(ClazzRepo clazzRepo, StudentRepo studentRepo,GradeService gradeService) {
+    public ClazzServiceImpl(ClazzRepo clazzRepo,
+                            StudentRepo studentRepo,
+                            GradeService gradeService,
+                            GradeRepo gradeRepo) {
         this.clazzRepo = clazzRepo;
         this.studentRepo = studentRepo;
         this.gradeService = gradeService;
+        this.gradeRepo = gradeRepo;
+    }
+
+
+    public Map<String, Long> sexRatio(String cname) throws Exception {
+        Map<String, Long> map = new HashMap<>(10);
+        //校验
+        if (!existByName(cname)) {
+            throw new Exception("不存在该班级");
+        }
+        Set<Student> studentSet = studentRepo.findByClazzCname(cname);
+        long men = studentSet.stream()
+                .filter(student -> "male".equals(student.getSgender()))
+                .count();
+        long women = studentSet.size() - men;
+        map.put("men", men);
+        map.put("women", women);
+        return map;
     }
 
     @Override
-    public String sexRatio(Integer c_id) {
-
-        //校验
-
-
-        int men = 0;
-        int women = 0;
-        Set<Student> studentSet = studentRepo.findByClazzId(c_id);
-
-//        studentSet.stream()
-//                .filter()
-//                .count()
-
-        for (Student s : studentSet) {
-            if ("male".equals(s.getGender())) {
-                men++;
-            } else {
-                women++;
-            }
-        }
+    public String sexRatioOne(String cname) throws Exception {
+        Map<String, Long> map = sexRatio(cname);
+        long men = map.get("men");
+        long women = map.get("women");
         String re;
         if (men >= women) {
             BigDecimal bg = new BigDecimal((double) men / women).setScale(1, RoundingMode.UP);
@@ -65,89 +72,77 @@ public class ClazzServiceImpl implements ClazzService {
             BigDecimal bg = new BigDecimal((double) women / men).setScale(1, RoundingMode.UP);
             re = "1:" + bg;
         }
-
-//        58:90
         return re;
     }
 
     @Override
-    public Boolean updateClazzWithGrade(Integer c_id, Integer g_id) throws Exception {
+    public String sexRatioTwo(String cname) throws Exception {
+        Map<String, Long> map = sexRatio(cname);
+        long men = map.get("men");
+        long women = map.get("women");
+        return men + ":" + women;
+    }
 
-        //  校验有没有这个班级
-        if (StringUtils.isBlank(c_id.toString())||existById(c_id)){
-            throw new Exception("班级id输入有误或不存在");
-        }
+    @Override
+    public Boolean updateClazzWithGrade(String cname, String gname) throws Exception {
+
+//        //  校验有没有这个班级
+//        if (StringUtils.isBlank(cname) || existByName(cname)) {
+//            throw new Exception("班级id输入有误或不存在");
+//        }
+
+        //检验班级
+        Clazz clazz = clazzRepo.findByCname(cname)
+                .orElseThrow(() -> new Exception("班级有误或不存在"));
+
         // 校验有没有这个年级
-        if (StringUtils.isBlank(g_id.toString())||gradeService.existById(g_id)){
-            throw new Exception("年级id输入有误或不存在");
-        }
+//        if (StringUtils.isBlank(gname) || !gradeService.existByName(gname)) {
+//            throw new Exception("年级id输入有误或不存在");
+//        }
+        Grade grade = gradeRepo.findByGname(gname)
+                .orElseThrow(() -> new Exception("年级有误或不存在"));
+
         // 校验这种情况是否需要更新
-
-
-        //更新
-        Optional<Clazz> optionalClazz = clazzRepo.findById(c_id);
-
-//        Clazz clazz1 = clazzRepo.findById(c_id)
-//                .orElseThrow(() -> new Exception(""));
-        Clazz clazz = new Clazz();
-        Grade grade = new Grade();
-        grade.setId(g_id);
-        if (optionalClazz.isPresent()) {
-            clazz = optionalClazz.get();
+//        if (clazzRepo.findByGradeGname(gname)
+//                .stream()
+//                .map(Clazz::getCname)
+//                .anyMatch((e)->e.equals(cname))) { throw new Exception("不需要更新"); }
+        if (existByCnameAndGname(cname, gname)) {
+            throw new Exception("不需要更新");
         }
 
-        //LUO JI BU WANZHENG
 
-
+        //重置clazz的年级
         clazz.setGrade(grade);
-        System.out.println(c_id);
-        System.out.println(clazz.getId());
+
+        //
+        System.out.println(cname);
+        System.out.println(clazz.getGrade().getGname());
+        //
+        //更新
         clazzRepo.save(clazz);
-        //确认
-        optionalClazz = clazzRepo.findById(c_id);
-        if (optionalClazz.isPresent()) {
-            clazz = optionalClazz.get();
-        }
-        return clazz.getGrade().getId() == g_id;
+        return true;
     }
 
     @Override
-    public Map<String, List<Clazz>> classifyByClazz() {
-        List<Clazz> clazzList = clazzRepo.findAll();
-        Map<String, List<Clazz>> gradeMap = new HashMap<>();
-        List<Clazz> valueClazz = new ArrayList<>();
-        int g_id = -1;
-        String key = "";
-        for (int i = 0; i < clazzList.size(); i++) {
-            Clazz clazz = clazzList.get(i);
-            if (i == 0) {
-                g_id = clazz.getGrade().getId();
-                key = clazz.getGrade().getGName();
-            } else if (g_id != clazz.getGrade().getId()) {
-                valueClazz= new ArrayList<>();
-                g_id = clazz.getGrade().getId();
-                key = clazz.getGrade().getGName();
-            }
-            System.out.println(key+" —————对应————— 班级："+clazz.getId());
-            valueClazz.add(clazz);
-            gradeMap.put(key, valueClazz);
-        }
-        for(String k:gradeMap.keySet()){
-            List<Clazz> lc = gradeMap.get(k);
-            System.out.println(k+" —拥有— ");
-            for (Clazz c:lc){
-                System.out.println("     —————— "+c.getId()+"班");
-            }
-            System.out.println();
-        }
+    public Map<String, Set<Clazz>> classify() {
+        //所有的年级
+        List<Grade> gradeList = gradeRepo.findAll();
+        Map<String, Set<Clazz>> collect = gradeList.stream()
+                .collect(Collectors.toMap(Grade::getGname, Grade::getClazzList));
+        return collect;
+    }
 
 
-        return gradeMap;
+    @Override
+    public Boolean existByName(String cname) {
+        Optional<Clazz> optionalClazz = clazzRepo.findByCname(cname);
+        return optionalClazz.isPresent();
     }
 
     @Override
-    public Boolean existById(Integer c_id) {
-        Optional<Clazz> optionalClazz = clazzRepo.findById(c_id);
+    public Boolean existByCnameAndGname(String cname, String gname) {
+        Optional<Clazz> optionalClazz = clazzRepo.findByCnameAndGradeGname(cname, gname);
         return optionalClazz.isPresent();
     }
 }
