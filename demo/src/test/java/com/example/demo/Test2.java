@@ -59,7 +59,6 @@ public class Test2 {
         Map<String, Set<Clazz>> map = clazzService.classify();
         System.out.println(map);
 
-        //
 
         Map<String, Set<Clazz>> gradeMap = gradeService.classify();
         for (String s : gradeMap.keySet()) {
